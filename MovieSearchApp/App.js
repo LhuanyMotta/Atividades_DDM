@@ -3,10 +3,10 @@ import { View, TextInput, Button, FlatList, Text, ActivityIndicator, StyleSheet,
 import axios from 'axios';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import Config from './API_KEY.env';
+import Config from './MovieSearch.env';
 
 // Chave da API TMDB
-const API_KEY = Config.API_KEY; // Modifique para a sua KEY, pois não forneci a minha nesse código fonte
+const API_KEY = Config.API_KEY; // Configuração do token
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 // Componente Home
