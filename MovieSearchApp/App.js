@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, FlatList, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, TextInput, Button, FlatList, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import axios from 'axios';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import Config from './API_KEY.env';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/Ionicons'; // Ícones para a barra inferior
+import Config from './MovieSearch.env';
 
-// Chave da API TMDB
-const API_KEY = Config.API_KEY; // Modifique para a sua KEY, pois não forneci a minha nesse código fonte
+const API_KEY = Config.API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 // Componente Home
-function HomeScreen({ navigation }) {
+function HomeScreen({ navigation, theme, toggleTheme }) {
   const [popularMovies, setPopularMovies] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Função para buscar filmes populares
   const fetchPopularMovies = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/movie/popular`, {
@@ -29,7 +29,6 @@ function HomeScreen({ navigation }) {
     }
   };
 
-  // Função para buscar filmes mais bem avaliados
   const fetchTopRatedMovies = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/movie/top_rated`, {
@@ -52,17 +51,22 @@ function HomeScreen({ navigation }) {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, theme === 'dark' ? styles.darkBackground : styles.lightBackground]}>
         <ActivityIndicator size="large" color="#007BFF" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bem-vindo ao App de Filmes</Text>
+    <ScrollView style={[styles.container, theme === 'dark' ? styles.darkBackground : styles.lightBackground]}>
+      <View style={styles.header}>
+        <Text style={[styles.logo, theme === 'dark' ? styles.darkText : styles.lightText]}>MELT Filmes</Text>
+        <TouchableOpacity onPress={toggleTheme} style={styles.themeToggleButton}>
+          <Text style={styles.buttonText}>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</Text>
+        </TouchableOpacity>
+      </View>
 
-      <Text style={styles.sectionTitle}>Filmes Populares</Text>
+      <Text style={[styles.sectionTitle, theme === 'dark' ? styles.darkText : styles.lightText]}>Filmes Populares</Text>
       <FlatList
         horizontal
         data={popularMovies}
@@ -74,13 +78,13 @@ function HomeScreen({ navigation }) {
                 source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
                 style={styles.movieImage}
               />
-              <Text style={styles.movieTitle}>{item.title}</Text>
+              <Text style={[styles.movieTitle, theme === 'dark' ? styles.darkText : styles.lightText]}>{item.title}</Text>
             </View>
           </TouchableOpacity>
         )}
       />
 
-      <Text style={styles.sectionTitle}>Filmes Mais Bem Avaliados</Text>
+      <Text style={[styles.sectionTitle, theme === 'dark' ? styles.darkText : styles.lightText]}>Filmes Mais Bem Avaliados</Text>
       <FlatList
         horizontal
         data={topRatedMovies}
@@ -92,27 +96,22 @@ function HomeScreen({ navigation }) {
                 source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
                 style={styles.movieImage}
               />
-              <Text style={styles.movieTitle}>{item.title}</Text>
+              <Text style={[styles.movieTitle, theme === 'dark' ? styles.darkText : styles.lightText]}>{item.title}</Text>
             </View>
           </TouchableOpacity>
         )}
       />
-
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Search')}>
-        <Text style={styles.buttonText}>Buscar mais filmes</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
-// Componente de busca de filmes
-function SearchScreen({ navigation }) {
+// Componente Search
+function SearchScreen({ navigation, theme }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Função de busca
   const searchMovies = async () => {
     if (!searchQuery) return;
 
@@ -141,26 +140,26 @@ function SearchScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, theme === 'dark' ? styles.darkBackground : styles.lightBackground]}>
       <TextInput
-        style={styles.input}
+        style={[styles.input, theme === 'dark' ? styles.darkInput : styles.lightInput]}
         placeholder="Buscar filme..."
+        placeholderTextColor={theme === 'dark' ? '#aaa' : '#888'}
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
       <Button title="Buscar" onPress={searchMovies} color="#007BFF" />
 
       {loading && <ActivityIndicator size="large" color="#007BFF" />}
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <Text style={[styles.error, theme === 'dark' ? styles.darkText : styles.lightText]}>{error}</Text>}
 
-      {/* FlatList para exibir os filmes encontrados */}
       <FlatList
         data={movies}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.searchListContainer}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.searchMovieCard}
+            style={[styles.searchMovieCard, theme === 'dark' ? styles.darkCard : styles.lightCard]}
             onPress={() => navigation.navigate('MovieDetails', { movieId: item.id })}
           >
             <View style={styles.movieRow}>
@@ -173,11 +172,11 @@ function SearchScreen({ navigation }) {
                 <View style={styles.placeholderImage} />
               )}
               <View style={styles.movieDetails}>
-                <Text style={styles.movieTitle}>{item.title}</Text>
-                <Text style={styles.movieReleaseDate}>
+                <Text style={[styles.movieTitle, theme === 'dark' ? styles.darkText : styles.lightText]}>{item.title}</Text>
+                <Text style={[styles.movieReleaseDate, theme === 'dark' ? styles.darkText : styles.lightText]}>
                   {item.release_date ? item.release_date : 'Data não disponível'}
                 </Text>
-                <Text style={styles.movieOverview}>
+                <Text style={[styles.movieOverview, theme === 'dark' ? styles.darkText : styles.lightText]}>
                   {item.overview ? item.overview.slice(0, 120) + '...' : 'Sem sinopse disponível'}
                 </Text>
               </View>
@@ -189,13 +188,122 @@ function SearchScreen({ navigation }) {
   );
 }
 
-// Tela de detalhes do filme
-function MovieDetailsScreen({ route }) {
+// Componente Categorias
+function CategoriesScreen({ navigation, theme }) {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/genre/movie/list`, {
+        params: {
+          api_key: API_KEY,
+        },
+      });
+      setCategories(response.data.genres);
+    } catch (err) {
+      console.error('Erro ao buscar categorias:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={[styles.loadingContainer, theme === 'dark' ? styles.darkBackground : styles.lightBackground]}>
+        <ActivityIndicator size="large" color="#007BFF" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, theme === 'dark' ? styles.darkBackground : styles.lightBackground]}>
+      <Text style={[styles.sectionTitle, theme === 'dark' ? styles.darkText : styles.lightText]}>Categorias</Text>
+      <FlatList
+        data={categories}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2} // Exibe os cartões em 2 colunas
+        contentContainerStyle={styles.categoryListContainer}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[styles.categoryCard, theme === 'dark' ? styles.darkCard : styles.lightCard]}
+            onPress={() => navigation.navigate('CategoryMovies', { genreId: item.id, genreName: item.name })}
+          >
+            <Icon name="film" size={24} color={theme === 'dark' ? '#fff' : '#333'} style={styles.categoryIcon} />
+            <Text style={[styles.categoryText, theme === 'dark' ? styles.darkText : styles.lightText]}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+      />
+    </View>
+  );
+}
+
+// Componente Filmes por Categoria
+function CategoryMoviesScreen({ route, theme }) {
+  const { genreId, genreName } = route.params;
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMoviesByGenre = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/discover/movie`, {
+        params: {
+          api_key: API_KEY,
+          with_genres: genreId,
+        },
+      });
+      setMovies(response.data.results);
+    } catch (err) {
+      console.error('Erro ao buscar filmes por categoria:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMoviesByGenre();
+  }, [genreId]);
+
+  if (loading) {
+    return (
+      <View style={[styles.loadingContainer, theme === 'dark' ? styles.darkBackground : styles.lightBackground]}>
+        <ActivityIndicator size="large" color="#007BFF" />
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={[styles.container, theme === 'dark' ? styles.darkBackground : styles.lightBackground]}>
+      <Text style={[styles.sectionTitle, theme === 'dark' ? styles.darkText : styles.lightText]}>Filmes de {genreName}</Text>
+      <FlatList
+        data={movies}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => navigation.navigate('MovieDetails', { movieId: item.id })}>
+            <View style={styles.movieCard}>
+              <Image
+                source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
+                style={styles.movieImage}
+              />
+              <Text style={[styles.movieTitle, theme === 'dark' ? styles.darkText : styles.lightText]}>{item.title}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
+    </ScrollView>
+  );
+}
+
+// Componente Detalhes do Filme
+function MovieDetailsScreen({ route, theme }) {
   const { movieId } = route.params;
   const [movieDetails, setMovieDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Função para buscar detalhes do filme
   const fetchMovieDetails = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/movie/${movieId}`, {
@@ -217,7 +325,7 @@ function MovieDetailsScreen({ route }) {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, theme === 'dark' ? styles.darkBackground : styles.lightBackground]}>
         <ActivityIndicator size="large" color="#007BFF" />
       </View>
     );
@@ -228,56 +336,186 @@ function MovieDetailsScreen({ route }) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={[styles.container, theme === 'dark' ? styles.darkBackground : styles.lightBackground]}>
       <Image
         source={{ uri: `https://image.tmdb.org/t/p/w500${movieDetails.poster_path}` }}
         style={styles.poster}
       />
-      <Text style={styles.movieTitle}>{movieDetails.title}</Text>
-      <Text style={styles.movieOverview}>{movieDetails.overview}</Text>
+      <Text style={[styles.movieTitle, theme === 'dark' ? styles.darkText : styles.lightText]}>{movieDetails.title}</Text>
+      <Text style={[styles.movieOverview, theme === 'dark' ? styles.darkText : styles.lightText]}>
+        {movieDetails.overview}
+      </Text>
 
       <View style={styles.movieInfoBlock}>
-        <Text style={styles.movieInfoText}>Avaliação: {movieDetails.vote_average}</Text>
-        <Text style={styles.movieInfoText}>Data de lançamento: {movieDetails.release_date}</Text>
-        <Text style={styles.movieInfoText}>Duração: {movieDetails.runtime} minutos</Text>
+        <Text style={[styles.movieInfoText, theme === 'dark' ? styles.darkText : styles.lightText]}>
+          Avaliação: {movieDetails.vote_average}
+        </Text>
+        <Text style={[styles.movieInfoText, theme === 'dark' ? styles.darkText : styles.lightText]}>
+          Data de lançamento: {movieDetails.release_date}
+        </Text>
+        <Text style={[styles.movieInfoText, theme === 'dark' ? styles.darkText : styles.lightText]}>
+          Duração: {movieDetails.runtime} minutos
+        </Text>
       </View>
 
-      <Text style={styles.movieSubtitle}>Gêneros:</Text>
+      <Text style={[styles.movieSubtitle, theme === 'dark' ? styles.darkText : styles.lightText]}>Gêneros:</Text>
       <View style={styles.genreList}>
         {movieDetails.genres.map((genre) => (
-          <Text key={genre.id} style={styles.genreItem}>
+          <Text key={genre.id} style={[styles.genreItem, theme === 'dark' ? styles.darkText : styles.lightText]}>
             {genre.name}
           </Text>
         ))}
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
+// Navegação
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
-// Componente de navegação
+function HomeTabs({ theme, toggleTheme }) {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Início') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Buscar') {
+            iconName = focused ? 'search' : 'search-outline';
+          } else if (route.name === 'Categorias') {
+            iconName = focused ? 'list' : 'list-outline';
+          }
+
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#007BFF',
+        tabBarInactiveTintColor: 'gray',
+        tabBarStyle: {
+          backgroundColor: theme === 'dark' ? '#121212' : '#F7F7F7',
+        },
+      })}
+    >
+      <Tab.Screen name="Início">
+        {(props) => <HomeScreen {...props} theme={theme} toggleTheme={toggleTheme} />}
+      </Tab.Screen>
+      <Tab.Screen name="Buscar">
+        {(props) => <SearchScreen {...props} theme={theme} />}
+      </Tab.Screen>
+      <Tab.Screen name="Categorias">
+        {(props) => <CategoriesScreen {...props} theme={theme} />}
+      </Tab.Screen>
+    </Tab.Navigator>
+  );
+}
+
+// Componente Principal
 export default function App() {
+  const [theme, setTheme] = useState('light');
+
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
+  };
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Search" component={SearchScreen} />
-        <Stack.Screen name="MovieDetails" component={MovieDetailsScreen} />
+      <Stack.Navigator>
+        <Stack.Screen name="HomeTabs" options={{ headerShown: false }}>
+          {(props) => <HomeTabs {...props} theme={theme} toggleTheme={toggleTheme} />}
+        </Stack.Screen>
+        <Stack.Screen name="MovieDetails">
+          {(props) => <MovieDetailsScreen {...props} theme={theme} />}
+        </Stack.Screen>
+        <Stack.Screen name="CategoryMovies">
+          {(props) => <CategoryMoviesScreen {...props} theme={theme} />}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
 
+// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+  },
+  lightBackground: {
     backgroundColor: '#F7F7F7',
   },
-  searchListContainer: {
-    flexGrow: 1,
-    paddingVertical: 10,
+  darkBackground: {
+    backgroundColor: '#121212',
+  },
+  lightText: {
+    color: '#333',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logo: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  button: {
+    backgroundColor: '#007BFF',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+  },
+  themeToggleButton: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  input: {
+    height: 50,
+    borderColor: '#007BFF',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 12,
+    paddingLeft: 16,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  darkInput: {
+    backgroundColor: '#444',
+    color: '#fff',
+    borderColor: '#555',
+  },
+  lightInput: {
+    backgroundColor: '#fff',
+    color: '#333',
+    borderColor: '#007BFF',
+  },
+  movieCard: {
+    marginRight: 16,
+    width: 150,
+    alignItems: 'center',
+  },
+  movieImage: {
+    width: 150,
+    height: 225,
+    borderRadius: 8,
   },
   searchMovieCard: {
     flexDirection: 'row',
@@ -285,7 +523,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
     padding: 10,
-    backgroundColor: '#fff',
     borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -293,10 +530,11 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  movieRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
+  darkCard: {
+    backgroundColor: '#333',
+  },
+  lightCard: {
+    backgroundColor: '#fff',
   },
   movieBanner: {
     width: 100,
@@ -316,83 +554,27 @@ const styles = StyleSheet.create({
   movieTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 5,
     textAlign: 'center',
   },
   movieReleaseDate: {
     fontSize: 14,
-    color: '#777',
     marginBottom: 5,
   },
   movieOverview: {
     fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
     marginTop: 8,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  button: {
-    backgroundColor: '#007BFF',
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
+  movieSubtitle: {
     fontSize: 18,
-  },
-  input: {
-    height: 50,
-    borderColor: '#007BFF',
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 12,
-    paddingLeft: 16,
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
-  movieCard: {
-    marginRight: 16,
-    width: 150,
-    alignItems: 'center',
-  },
-  movieImage: {
-    width: 150,
-    height: 225,
-    borderRadius: 8,
-  },
-  poster: {
-    width: '100%',
-    height: 400,
-    borderRadius: 8,
-    marginBottom: 16,
+    fontWeight: 'bold',
+    marginTop: 16,
   },
   movieInfoBlock: {
     marginTop: 12,
   },
   movieInfoText: {
     fontSize: 14,
-    color: '#555',
     marginTop: 8,
   },
   genreList: {
@@ -408,15 +590,44 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
   },
-  movieSubtitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 16,
-    color: '#333',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   error: {
     color: 'red',
     textAlign: 'center',
     marginVertical: 10,
+  },
+  poster: {
+    width: '100%',
+    height: 400,
+    resizeMode: 'cover',
+    borderRadius: 8,
+  },
+  categoryCard: {
+    flex: 1,
+    margin: 8,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  categoryIcon: {
+    marginBottom: 8,
+  },
+  categoryText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  categoryListContainer: {
+    paddingHorizontal: 8,
   },
 });
